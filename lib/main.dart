@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl_standalone.dart'; // Add this import
 import 'package:intl/date_symbol_data_local.dart'; // Add this import
 import 'layout/home.dart';
 

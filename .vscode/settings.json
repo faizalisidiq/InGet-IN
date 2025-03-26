@@ -1,3 +1,4 @@
 {
-    "cmake.sourceDirectory": "D:/Halaman Utama/halamanutama/windows"
+  "cmake.sourceDirectory": "D:/Halaman Utama/halamanutama/windows",
+  "java.configuration.updateBuildConfiguration": "interactive"
 }

@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
+import '../services/GoogleCalendar.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -11,6 +12,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class HomeScreenState extends State<HomeScreen> {
+  final GoogleCalendarService _calendarService = GoogleCalendarService();
+
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay = DateTime.now();
 
@@ -120,7 +123,17 @@ class HomeScreenState extends State<HomeScreen> {
                         FloatingActionButton(
                           backgroundColor: Colors.white.withOpacity(0.3),
                           elevation: 5,
-                          onPressed: () {},
+                          onPressed: () async {
+                            try {
+                              await _calendarService.signInAndGetEvents();
+                            } catch (e) {
+                              print('Error in button press: $e');
+                              // Tambahkan ScaffoldMessenger untuk menampilkan error ke user
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Error: $e')),
+                              );
+                            }
+                          },
                           child: const Icon(Icons.event, color: Colors.white),
                         ),
                         FloatingActionButton(

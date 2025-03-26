@@ -28,6 +28,9 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders += [
+            'REVERSED_CLIENT_ID': 'com.googleusercontent.apps.716402388400-ov7dc9kg4ha60igl02cb8egs1ju841do'
+        ]
     }
 
     buildTypes {
