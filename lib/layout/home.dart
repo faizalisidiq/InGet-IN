@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import '../services/GoogleCalendar.dart';
+import 'fitur.dart';
+import 'todo_list.dart';
+import 'memo.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,6 +19,9 @@ class HomeScreenState extends State<HomeScreen> {
 
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay = DateTime.now();
+  Map<DateTime, List<String>> _tasksByDate = {};
+  String? _memoTitle;
+  String? _memoDetail;
 
   @override
   Widget build(BuildContext context) {
@@ -62,6 +68,26 @@ class HomeScreenState extends State<HomeScreen> {
                               _focusedDay = focusedDay;
                             });
                           },
+                          calendarBuilders: CalendarBuilders(
+                            markerBuilder: (context, date, events) {
+                              if (_tasksByDate[date] != null &&
+                                  _tasksByDate[date]!.isNotEmpty) {
+                                return Positioned(
+                                  right: 1,
+                                  bottom: 1,
+                                  child: Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: const BoxDecoration(
+                                      color: Colors.red,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                );
+                              }
+                              return null;
+                            },
+                          ),
                           headerStyle: const HeaderStyle(
                             formatButtonVisible: false,
                             titleCentered: true,
@@ -73,6 +99,7 @@ class HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                         ),
+
                         const SizedBox(height: 10),
                         Text(
                           "Dipilih: ${_selectedDay != null ? DateFormat.yMMMMd('id').format(_selectedDay!) : 'Belum dipilih'}",
@@ -114,12 +141,59 @@ class HomeScreenState extends State<HomeScreen> {
                         FloatingActionButton(
                           backgroundColor: Colors.white.withOpacity(0.3),
                           elevation: 5,
-                          onPressed: () {},
+                          onPressed: () async {
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => fiturScreen(),
+                              ),
+                            );
+
+                            if (result != null &&
+                                result is Map<String, dynamic>) {
+                              setState(() {
+                                final date = result['date'] as DateTime;
+                                final task = result['task'] as String;
+
+                                // Tambahkan tugas ke tanggal yang sesuai
+                                if (_tasksByDate[date] == null) {
+                                  _tasksByDate[date] = [];
+                                }
+                                _tasksByDate[date]!.add(task);
+                              });
+                            }
+                          },
                           child: const Icon(
                             Icons.note_add,
                             color: Colors.white,
                           ),
                         ),
+
+                        FloatingActionButton(
+                          backgroundColor: Colors.white.withOpacity(0.3),
+                          elevation: 5,
+                          onPressed: () async {
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const MemoScreen(),
+                              ),
+                            );
+
+                            if (result != null &&
+                                result is Map<String, String>) {
+                              setState(() {
+                                _memoTitle = result['title'];
+                                _memoDetail = result['detail'];
+                              });
+                            }
+                          },
+                          child: const Icon(
+                            Icons.note_add,
+                            color: Colors.white,
+                          ),
+                        ),
+
                         FloatingActionButton(
                           backgroundColor: Colors.white.withOpacity(0.3),
                           elevation: 5,
@@ -136,28 +210,61 @@ class HomeScreenState extends State<HomeScreen> {
                           },
                           child: const Icon(Icons.event, color: Colors.white),
                         ),
-                        FloatingActionButton(
-                          backgroundColor: Colors.white.withOpacity(0.3),
-                          elevation: 5,
-                          onPressed: () {},
-                          child: const Icon(Icons.alarm, color: Colors.white),
-                        ),
+                        // FloatingActionButton(
+                        //   backgroundColor: Colors.white.withOpacity(0.3),
+                        //   elevation: 5,
+                        //   onPressed: () {},
+                        //   child: const Icon(Icons.alarm, color: Colors.white),
+                        // ),
                       ],
                     ),
                   ),
                 ),
                 const SizedBox(height: 20),
+
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _buildBlurContainer(
-                    child: const Center(
-                      child: Text(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _buildBlurContainer(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
                         "Catatan",
                         style: TextStyle(color: Colors.white, fontSize: 18),
                       ),
-                    ),
+                      const SizedBox(height: 10),
+                      if (_memoTitle != null && _memoDetail != null)
+                        Column(
+                          children: [
+                            Text(
+                              _memoTitle!,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 5),
+                            Text(
+                              _memoDetail!,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        )
+                      else
+                        const Text(
+                          "Belum ada catatan.",
+                          style: TextStyle(color: Colors.white, fontSize: 14),
+                        ),
+                    ],
                   ),
                 ),
+              ),
+            ),
                 const SizedBox(height: 90),
               ],
             ),
