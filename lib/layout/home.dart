@@ -6,6 +6,8 @@ import '../services/GoogleCalendar.dart';
 import 'fitur.dart';
 import 'todo_list.dart';
 import 'memo.dart';
+=======
+import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -117,6 +119,7 @@ class HomeScreenState extends State<HomeScreen> {
                             });
                           },
                           style: TextButton.styleFrom(
+                            // ignore: deprecated_member_use
                             backgroundColor: Colors.white.withOpacity(0.3),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
@@ -210,12 +213,6 @@ class HomeScreenState extends State<HomeScreen> {
                           },
                           child: const Icon(Icons.event, color: Colors.white),
                         ),
-                        // FloatingActionButton(
-                        //   backgroundColor: Colors.white.withOpacity(0.3),
-                        //   elevation: 5,
-                        //   onPressed: () {},
-                        //   child: const Icon(Icons.alarm, color: Colors.white),
-                        // ),
                       ],
                     ),
                   ),
@@ -271,19 +268,14 @@ class HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-      bottomNavigationBar: BottomAppBar(
-        color: const Color.fromARGB(255, 192, 199, 255),
-        elevation: 0,
-        height: 60, // Adjust the height here
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFF9DA4FF),
-        elevation: 5,
-        shape: const CircleBorder(),
-        onPressed: () {},
-        child: const Icon(Icons.home, size: 30, color: Colors.black),
-      ),
+      bottomNavigationBar: ConvexAppBar(
+      items: [
+      TabItem(icon: Icons.home, title: 'Home')
+      ],
+      backgroundColor: const Color(0xFF4949B1),
+      // ignore: avoid_print
+      onTap: (int i) => print('click index=$i'),
+    )
     );
   }
 
