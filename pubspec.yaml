@@ -37,11 +37,15 @@ dependencies:
   intl: ^0.20.2
   table_calendar: ^3.0.9
   flutter_dotenv: ^5.2.1
-  googleapis: ^14.0.0
-  googleapis_auth: ^2.0.0
-  google_sign_in: ^6.1.6
+  # googleapis: ^14.0.0
+  # googleapis_auth: ^2.0.0
+  # google_sign_in: ^6.1.6
   url_launcher: ^6.2.5
   convex_bottom_bar: ^3.2.0
+  path_provider: ^2.1.5
+  sqflite: ^2.4.2  
+  path: ^1.9.1
+
 
 dev_dependencies:
   flutter_test:

@@ -7,18 +7,18 @@ class fiturScreen extends StatefulWidget {
   const fiturScreen({super.key});
 
   @override
-  State<fiturScreen> createState() => _HomeScreenState();
+  State<fiturScreen> createState() => _FiturScreenState();
 }
 
-class _HomeScreenState extends State<fiturScreen> {
+class _FiturScreenState extends State<fiturScreen> {
   late DateTime _currentDate;
   late Timer _timer;
-  
+
   @override
   void initState() {
     super.initState();
     _currentDate = DateTime.now();
-    
+
     // Mengupdate tanggal setiap menit
     _timer = Timer.periodic(const Duration(minutes: 1), (timer) {
       setState(() {
@@ -26,18 +26,28 @@ class _HomeScreenState extends State<fiturScreen> {
       });
     });
   }
-  
+
   @override
   void dispose() {
     _timer.cancel();
     super.dispose();
   }
-  
+
   // Format tanggal ke format Indonesia
   String _formatDate(DateTime date) {
     final months = [
-      'JANUARI', 'FEBRUARI', 'MARET', 'APRIL', 'MEI', 'JUNI',
-      'JULI', 'AGUSTUS', 'SEPTEMBER', 'OKTOBER', 'NOVEMBER', 'DESEMBER'
+      'JANUARI',
+      'FEBRUARI',
+      'MARET',
+      'APRIL',
+      'MEI',
+      'JUNI',
+      'JULI',
+      'AGUSTUS',
+      'SEPTEMBER',
+      'OKTOBER',
+      'NOVEMBER',
+      'DESEMBER',
     ];
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
@@ -62,7 +72,7 @@ class _HomeScreenState extends State<fiturScreen> {
                   children: [
                     IconButton(
                       icon: const Icon(Icons.arrow_back, color: Colors.white),
-                       onPressed: () {
+                      onPressed: () {
                         Navigator.pop(context);
                       },
                     ),
@@ -82,7 +92,10 @@ class _HomeScreenState extends State<fiturScreen> {
               ),
               const SizedBox(height: 10),
               Container(
-                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 10,
+                  horizontal: 20,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFF6C63FF),
                   borderRadius: BorderRadius.circular(20),
@@ -96,15 +109,12 @@ class _HomeScreenState extends State<fiturScreen> {
                 ),
                 child: Text(
                   _formatDate(_currentDate),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.white,
-                  ),
+                  style: const TextStyle(fontSize: 16, color: Colors.white),
                 ),
               ),
               const SizedBox(height: 60),
               FeatureButton(
-                title: 'To-Do-List', 
+                title: 'To-Do-List',
                 iconPath: 'assets/images/todo_icon.png',
                 onPressed: () {
                   Navigator.push(
@@ -115,7 +125,7 @@ class _HomeScreenState extends State<fiturScreen> {
               ),
               const SizedBox(height: 30),
               FeatureButton(
-                title: 'Memo', 
+                title: 'Memo',
                 iconPath: 'assets/images/memo_icon.png',
                 onPressed: () {
                   Navigator.push(
@@ -175,16 +185,17 @@ class FeatureButton extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     // Gunakan Icon sebagai placeholder jika image tidak tersedia
-                    title == 'To-Do-List' 
-                      ? const Icon(Icons.check_box, color: Colors.white, size: 40)
-                      : const Icon(Icons.note, color: Colors.white, size: 40),
+                    title == 'To-Do-List'
+                        ? const Icon(
+                          Icons.check_box,
+                          color: Colors.white,
+                          size: 40,
+                        )
+                        : const Icon(Icons.note, color: Colors.white, size: 40),
                     const SizedBox(width: 10),
                     Text(
                       title,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        color: Colors.white,
-                      ),
+                      style: const TextStyle(fontSize: 20, color: Colors.white),
                     ),
                   ],
                 ),

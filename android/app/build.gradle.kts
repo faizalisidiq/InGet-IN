@@ -22,15 +22,10 @@ android {
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.halamanutama"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-        manifestPlaceholders += [
-            'REVERSED_CLIENT_ID': 'com.googleusercontent.apps.716402388400-ov7dc9kg4ha60igl02cb8egs1ju841do'
-        ]
     }
 
     buildTypes {

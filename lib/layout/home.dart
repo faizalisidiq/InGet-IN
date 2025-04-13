@@ -1,12 +1,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:halamanutama/database/database.dart';
+import 'package:halamanutama/models/task.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
-import '../services/GoogleCalendar.dart';
-import 'fitur.dart';
-import 'todo_list.dart';
-import 'memo.dart';
-=======
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -17,13 +14,12 @@ class HomeScreen extends StatefulWidget {
 }
 
 class HomeScreenState extends State<HomeScreen> {
-  final GoogleCalendarService _calendarService = GoogleCalendarService();
+  final DatabaseService _databaseService = DatabaseService.instance;
 
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay = DateTime.now();
   Map<DateTime, List<String>> _tasksByDate = {};
-  String? _memoTitle;
-  String? _memoDetail;
+  String? _task;
 
   @override
   Widget build(BuildContext context) {
@@ -63,8 +59,6 @@ class HomeScreenState extends State<HomeScreen> {
                           selectedDayPredicate:
                               (day) => isSameDay(_selectedDay, day),
                           onDaySelected: (selectedDay, focusedDay) {
-                            print("Tanggal dipilih: $selectedDay");
-
                             setState(() {
                               _selectedDay = selectedDay;
                               _focusedDay = focusedDay;
@@ -101,7 +95,6 @@ class HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                         ),
-
                         const SizedBox(height: 10),
                         Text(
                           "Dipilih: ${_selectedDay != null ? DateFormat.yMMMMd('id').format(_selectedDay!) : 'Belum dipilih'}",
@@ -119,7 +112,6 @@ class HomeScreenState extends State<HomeScreen> {
                             });
                           },
                           style: TextButton.styleFrom(
-                            // ignore: deprecated_member_use
                             backgroundColor: Colors.white.withOpacity(0.3),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
@@ -138,144 +130,133 @@ class HomeScreenState extends State<HomeScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: _buildBlurContainer(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    child: Column(
                       children: [
                         FloatingActionButton(
-                          backgroundColor: Colors.white.withOpacity(0.3),
-                          elevation: 5,
-                          onPressed: () async {
-                            final result = await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => fiturScreen(),
-                              ),
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder:
+                                  (_) => AlertDialog(
+                                    title: const Text("Add Task"),
+                                    content: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        TextField(
+                                          onChanged: (value) {
+                                            setState(() {
+                                              _task = value;
+                                            });
+                                          },
+                                          decoration: const InputDecoration(
+                                            border: OutlineInputBorder(),
+                                            hintText: 'Subscribe...',
+                                          ),
+                                        ),
+                                        MaterialButton(
+                                          color:
+                                              Theme.of(
+                                                context,
+                                              ).colorScheme.primary,
+                                          onPressed: () {
+                                            if (_task == null ||
+                                                _task!.isEmpty) {
+                                              return;
+                                            }
+                                            _databaseService.addTask(_task!);
+                                            setState(() {
+                                              _task = null;
+                                            });
+                                            Navigator.pop(context);
+                                          },
+                                          child: const Text(
+                                            "Add",
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                             );
-
-                            if (result != null &&
-                                result is Map<String, dynamic>) {
-                              setState(() {
-                                final date = result['date'] as DateTime;
-                                final task = result['task'] as String;
-
-                                // Tambahkan tugas ke tanggal yang sesuai
-                                if (_tasksByDate[date] == null) {
-                                  _tasksByDate[date] = [];
-                                }
-                                _tasksByDate[date]!.add(task);
-                              });
-                            }
                           },
-                          child: const Icon(
-                            Icons.note_add,
-                            color: Colors.white,
-                          ),
-                        ),
-
-                        FloatingActionButton(
-                          backgroundColor: Colors.white.withOpacity(0.3),
-                          elevation: 5,
-                          onPressed: () async {
-                            final result = await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const MemoScreen(),
-                              ),
-                            );
-
-                            if (result != null &&
-                                result is Map<String, String>) {
-                              setState(() {
-                                _memoTitle = result['title'];
-                                _memoDetail = result['detail'];
-                              });
-                            }
-                          },
-                          child: const Icon(
-                            Icons.note_add,
-                            color: Colors.white,
-                          ),
-                        ),
-
-                        FloatingActionButton(
-                          backgroundColor: Colors.white.withOpacity(0.3),
-                          elevation: 5,
-                          onPressed: () async {
-                            try {
-                              await _calendarService.signInAndGetEvents();
-                            } catch (e) {
-                              print('Error in button press: $e');
-                              // Tambahkan ScaffoldMessenger untuk menampilkan error ke user
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Error: $e')),
-                              );
-                            }
-                          },
-                          child: const Icon(Icons.event, color: Colors.white),
+                          child: const Icon(Icons.add),
                         ),
                       ],
                     ),
                   ),
                 ),
                 const SizedBox(height: 20),
-
                 Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: _buildBlurContainer(
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text(
-                        "Catatan",
-                        style: TextStyle(color: Colors.white, fontSize: 18),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: _buildBlurContainer(
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            "Catatan",
+                            style: TextStyle(color: Colors.white, fontSize: 18),
+                          ),
+                          const SizedBox(height: 10),
+                          FutureBuilder(
+                            future: _databaseService.getTasks(),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return const CircularProgressIndicator();
+                              }
+                              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                                return const Text(
+                                  "Belum ada tugas.",
+                                  style: TextStyle(color: Colors.white),
+                                );
+                              }
+                              return ListView.builder(
+                                shrinkWrap: true,
+                                itemCount: snapshot.data?.length ?? 0,
+                                itemBuilder: (context, index) {
+                                  Task task = snapshot.data![index];
+                                  return ListTile(
+                                    leading: IconButton(
+                                      icon: const Icon(Icons.delete),
+                                      onPressed: () {
+                                        _databaseService.deleteTask(task.id);
+                                        setState(() {});
+                                      },
+                                    ),
+                                    title: Text(task.content),
+                                    trailing: Checkbox(
+                                      value: task.status == 1,
+                                      onChanged: (value) {
+                                        _databaseService.updateTaskStatus(
+                                          task.id,
+                                          value == true ? 1 : 0,
+                                        );
+                                        setState(() {});
+                                      },
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 10),
-                      if (_memoTitle != null && _memoDetail != null)
-                        Column(
-                          children: [
-                            Text(
-                              _memoTitle!,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 5),
-                            Text(
-                              _memoDetail!,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        )
-                      else
-                        const Text(
-                          "Belum ada catatan.",
-                          style: TextStyle(color: Colors.white, fontSize: 14),
-                        ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
-            ),
-                const SizedBox(height: 90),
               ],
             ),
           ),
         ),
       ),
       bottomNavigationBar: ConvexAppBar(
-      items: [
-      TabItem(icon: Icons.home, title: 'Home')
-      ],
-      backgroundColor: const Color(0xFF4949B1),
-      // ignore: avoid_print
-      onTap: (int i) => print('click index=$i'),
-    )
+        items: [TabItem(icon: Icons.home, title: 'Home')],
+        backgroundColor: const Color(0xFF4949B1),
+        onTap: (int i) => print('click index=$i'),
+      ),
     );
   }
 
