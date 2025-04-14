@@ -20,6 +20,8 @@ class HomeScreenState extends State<HomeScreen> {
   DateTime? _selectedDay = DateTime.now();
   Map<DateTime, List<String>> _tasksByDate = {};
   String? _task;
+  bool _reminder = false;
+  List<String> _reminderList = [];
 
   @override
   Widget build(BuildContext context) {
@@ -138,45 +140,365 @@ class HomeScreenState extends State<HomeScreen> {
                               context: context,
                               builder:
                                   (_) => AlertDialog(
-                                    title: const Text("Add Task"),
-                                    content: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        TextField(
-                                          onChanged: (value) {
-                                            setState(() {
-                                              _task = value;
-                                            });
-                                          },
-                                          decoration: const InputDecoration(
-                                            border: OutlineInputBorder(),
-                                            hintText: 'Subscribe...',
-                                          ),
-                                        ),
-                                        MaterialButton(
-                                          color:
-                                              Theme.of(
-                                                context,
-                                              ).colorScheme.primary,
-                                          onPressed: () {
-                                            if (_task == null ||
-                                                _task!.isEmpty) {
-                                              return;
-                                            }
-                                            _databaseService.addTask(_task!);
-                                            setState(() {
-                                              _task = null;
-                                            });
-                                            Navigator.pop(context);
-                                          },
-                                          child: const Text(
-                                            "Add",
-                                            style: TextStyle(
-                                              color: Colors.white,
+                                    content: SingleChildScrollView(
+                                      child: Column(
+                                        children: [
+                                          GestureDetector(
+                                            onTap: () => _selectDate(context),
+                                            child: Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    vertical: 8,
+                                                    horizontal: 16,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFF5A56D2),
+                                                borderRadius:
+                                                    BorderRadius.circular(100),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.black
+                                                        .withOpacity(0.3),
+                                                    blurRadius: 10,
+                                                    offset: const Offset(5, 5),
+                                                  ),
+                                                ],
+                                              ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Text(
+                                                    _formatDate(_selectedDay),
+                                                    style: const TextStyle(
+                                                      fontSize: 16,
+                                                      color: Colors.white,
+                                                      fontWeight:
+                                                          FontWeight.w400,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 5),
+                                                  const Icon(
+                                                    Icons.edit_calendar,
+                                                    color: Colors.white,
+                                                    size: 16,
+                                                  ),
+                                                ],
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                      ],
+                                          const SizedBox(height: 20),
+
+
+                                  
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              InkWell(
+                                                onTap: () {
+                                                  Navigator.pop(context);
+                                                },
+                                                child: Container(
+                                                  width: 60,
+                                                  height: 60,
+                                                  decoration: BoxDecoration(
+                                                    color: const Color(
+                                                      0xFF9DA3FF,
+                                                    ),
+                                                    shape: BoxShape.circle,
+                                                    boxShadow: [
+                                                      BoxShadow(
+                                                        color: Colors.black
+                                                            .withOpacity(0.3),
+                                                        blurRadius: 4,
+                                                        offset: const Offset(
+                                                          0,
+                                                          4,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  child: const Icon(
+                                                    Icons.close,
+                                                    color: Colors.black,
+                                                    size: 30,
+                                                  ),
+                                                ),
+                                              ),
+                                              InkWell(
+                                                onTap: () {
+                                                  final task =
+                                                      'Tugas pada ${_formatDate(_selectedDay)}';
+                                                  Navigator.pop(context, {
+                                                    'date': _selectedDay,
+                                                    'task': task,
+                                                  });
+                                                },
+                                                child: Container(
+                                                  width: 60,
+                                                  height: 60,
+                                                  decoration: BoxDecoration(
+                                                    color: const Color(
+                                                      0xFF9DA3FF,
+                                                    ),
+                                                    shape: BoxShape.circle,
+                                                    boxShadow: [
+                                                      BoxShadow(
+                                                        color: Colors.black
+                                                            .withOpacity(0.3),
+                                                        blurRadius: 4,
+                                                        offset: const Offset(
+                                                          0,
+                                                          4,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  child: const Icon(
+                                                    Icons.check,
+                                                    color: Colors.black,
+                                                    size: 30,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 20),
+
+                                    TextField(
+                                  onChanged: (value) {
+                                    _task = value; // Simpan input pengguna ke variabel _task
+                                  },
+                                  decoration: InputDecoration(
+                                    hintText: "Masukkan tugas baru...",
+                                    hintStyle: const TextStyle(color: Colors.black54),
+                                    filled: true,
+                                    fillColor: Colors.grey[200],
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 20),
+
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 15,
+                                            ),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Row(
+                                                  children: [
+                                                    const Icon(
+                                                      Icons.notifications,
+                                                      size: 22,
+                                                    ),
+                                                    const SizedBox(width: 10),
+                                                    const Text(
+                                                      'Atur Pengingat',
+                                                      style: TextStyle(
+                                                        color: Colors.black,
+                                                        fontSize: 16,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                    const Spacer(),
+                                                    Switch(
+                                                      value: _reminder,
+                                                      onChanged: (value) {
+                                                        setState(() {
+                                                          _reminder = value;
+                                                          if (!value) {
+                                                            _reminderList
+                                                                .clear();
+                                                          } else if (_reminderList
+                                                              .isEmpty) {
+                                                            _reminderList.add(
+                                                              '15 Menit Sebelum',
+                                                            );
+                                                          }
+                                                        });
+                                                      },
+                                                      activeColor: Colors.blue,
+                                                    ),
+                                                  ],
+                                                ),
+                                                Visibility(
+                                                  visible: _reminder,
+                                                  child: Column(
+                                                    children: [
+                                                      Column(
+                                                        children: List.generate(
+                                                          _reminderList.length,
+                                                          (index) => Padding(
+                                                            padding:
+                                                                const EdgeInsets.only(
+                                                                  left: 40,
+                                                                ),
+                                                            child: Row(
+                                                              children: [
+                                                                const Icon(
+                                                                  Icons.alarm,
+                                                                  size: 20,
+                                                                ),
+                                                                const SizedBox(
+                                                                  width: 10,
+                                                                ),
+                                                                Text(
+                                                                  _reminderList[index],
+                                                                  style:
+                                                                      const TextStyle(
+                                                                        fontSize:
+                                                                            13,
+                                                                      ),
+                                                                ),
+                                                                const Spacer(),
+                                                                IconButton(
+                                                                  icon: const Icon(
+                                                                    Icons.close,
+                                                                    size: 20,
+                                                                  ),
+                                                                  onPressed: () {
+                                                                    _removeReminder(
+                                                                      index,
+                                                                    );
+                                                                  },
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      if (_reminderList
+                                                          .isNotEmpty)
+                                                        const Padding(
+                                                          padding:
+                                                              EdgeInsets.symmetric(
+                                                                horizontal: 40,
+                                                              ),
+                                                          child: Divider(
+                                                            thickness: 1,
+                                                          ),
+                                                        ),
+                                                      InkWell(
+                                                        onTap: () {
+                                                          showDialog(
+                                                            context: context,
+                                                            builder:
+                                                                (
+                                                                  context,
+                                                                ) => SimpleDialog(
+                                                                  title: const Text(
+                                                                    'Pilih waktu pengingat',
+                                                                  ),
+                                                                  children: [
+                                                                    SimpleDialogOption(
+                                                                      onPressed: () {
+                                                                        _addReminder(
+                                                                          '5 menit sebelum',
+                                                                        );
+                                                                        Navigator.pop(
+                                                                          context,
+                                                                        );
+                                                                      },
+                                                                      child: const Text(
+                                                                        '5 menit sebelum',
+                                                                      ),
+                                                                    ),
+                                                                    SimpleDialogOption(
+                                                                      onPressed: () {
+                                                                        _addReminder(
+                                                                          '10 menit sebelum',
+                                                                        );
+                                                                        Navigator.pop(
+                                                                          context,
+                                                                        );
+                                                                      },
+                                                                      child: const Text(
+                                                                        '10 menit sebelum',
+                                                                      ),
+                                                                    ),
+                                                                    SimpleDialogOption(
+                                                                      onPressed: () {
+                                                                        _addReminder(
+                                                                          '15 menit sebelum',
+                                                                        );
+                                                                        Navigator.pop(
+                                                                          context,
+                                                                        );
+                                                                      },
+                                                                      child: const Text(
+                                                                        '15 menit sebelum',
+                                                                      ),
+                                                                    ),
+                                                                    SimpleDialogOption(
+                                                                      onPressed: () {
+                                                                        _addReminder(
+                                                                          '30 menit sebelum',
+                                                                        );
+                                                                        Navigator.pop(
+                                                                          context,
+                                                                        );
+                                                                      },
+                                                                      child: const Text(
+                                                                        '30 menit sebelum',
+                                                                      ),
+                                                                    ),
+                                                                    SimpleDialogOption(
+                                                                      onPressed: () {
+                                                                        _addReminder(
+                                                                          '1 jam sebelum',
+                                                                        );
+                                                                        Navigator.pop(
+                                                                          context,
+                                                                        );
+                                                                      },
+                                                                      child: const Text(
+                                                                        '1 jam sebelum',
+                                                                      ),
+                                                                    ),
+                                                                  ],
+                                                                ),
+                                                          );
+                                                        },
+                                                        child: Padding(
+                                                          padding:
+                                                              const EdgeInsets.only(
+                                                                left: 40,
+                                                              ),
+                                                          child: Row(
+                                                            children: const [
+                                                              Icon(
+                                                                Icons.add,
+                                                                size: 20,
+                                                              ),
+                                                              SizedBox(
+                                                                width: 10,
+                                                              ),
+                                                              Text(
+                                                                'Tambahkan Pengingat',
+                                                                style:
+                                                                    TextStyle(
+                                                                      fontSize:
+                                                                          13,
+                                                                    ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                             );
@@ -188,6 +510,7 @@ class HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
+              
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: _buildBlurContainer(
@@ -276,5 +599,36 @@ class HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+  }
+
+  String _formatDate(DateTime? date) {
+    if (date == null) return 'Pilih Tanggal';
+    return DateFormat('dd MMM yyyy').format(date);
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDay ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+    );
+    if (picked != null && picked != _selectedDay) {
+      setState(() {
+        _selectedDay = picked;
+      });
+    }
+  }
+
+  void _addReminder(String reminder) {
+    setState(() {
+      _reminderList.add(reminder);
+    });
+  }
+
+  void _removeReminder(int index) {
+    setState(() {
+      _reminderList.removeAt(index);
+    });
   }
 }
