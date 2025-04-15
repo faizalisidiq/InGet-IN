@@ -1,7 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:halamanutama/database/database.dart';
-import 'package:halamanutama/models/task.dart';
+import 'package:todolist/database/database.dart';
+import 'package:todolist/layout/todo_list.dart';
+import 'package:todolist/models/task.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
@@ -14,12 +15,26 @@ class HomeScreen extends StatefulWidget {
 }
 
 class HomeScreenState extends State<HomeScreen> {
-  final DatabaseService _databaseService = DatabaseService.instance;
-
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay = DateTime.now();
   Map<DateTime, List<String>> _tasksByDate = {};
   String? _task;
+  bool _reminder = false;
+  List<String> _reminderList = [];
+  List<Todo> _notes = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchTodos();
+  }
+
+  void fetchTodos() async {
+    final todo = await DBHelper.getNotes();
+    setState(() {
+      _notes = todo;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -133,61 +148,26 @@ class HomeScreenState extends State<HomeScreen> {
                     child: Column(
                       children: [
                         FloatingActionButton(
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder:
-                                  (_) => AlertDialog(
-                                    title: const Text("Add Task"),
-                                    content: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        TextField(
-                                          onChanged: (value) {
-                                            setState(() {
-                                              _task = value;
-                                            });
-                                          },
-                                          decoration: const InputDecoration(
-                                            border: OutlineInputBorder(),
-                                            hintText: 'Subscribe...',
-                                          ),
-                                        ),
-                                        MaterialButton(
-                                          color:
-                                              Theme.of(
-                                                context,
-                                              ).colorScheme.primary,
-                                          onPressed: () {
-                                            if (_task == null ||
-                                                _task!.isEmpty) {
-                                              return;
-                                            }
-                                            _databaseService.addTask(_task!);
-                                            setState(() {
-                                              _task = null;
-                                            });
-                                            Navigator.pop(context);
-                                          },
-                                          child: const Text(
-                                            "Add",
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
+                          onPressed: () async {
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => TodoListScreen(),
+                              ),
                             );
+
+                            if (result == true) {
+                              fetchTodos(); // refresh setelah tambah
+                            }
                           },
-                          child: const Icon(Icons.add),
+                          child: Icon(Icons.add),
                         ),
                       ],
                     ),
                   ),
                 ),
                 const SizedBox(height: 20),
+
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: _buildBlurContainer(
@@ -200,48 +180,73 @@ class HomeScreenState extends State<HomeScreen> {
                             style: TextStyle(color: Colors.white, fontSize: 18),
                           ),
                           const SizedBox(height: 10),
-                          FutureBuilder(
-                            future: _databaseService.getTasks(),
-                            builder: (context, snapshot) {
-                              if (snapshot.connectionState ==
-                                  ConnectionState.waiting) {
-                                return const CircularProgressIndicator();
-                              }
-                              if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                                return const Text(
-                                  "Belum ada tugas.",
+                          _notes.isEmpty
+                              ? const Center(
+                                child: Text(
+                                  "Belum ada catatan",
                                   style: TextStyle(color: Colors.white),
-                                );
-                              }
-                              return ListView.builder(
+                                ),
+                              )
+                              : ListView.builder(
                                 shrinkWrap: true,
-                                itemCount: snapshot.data?.length ?? 0,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: _notes.length,
                                 itemBuilder: (context, index) {
-                                  Task task = snapshot.data![index];
-                                  return ListTile(
-                                    leading: IconButton(
-                                      icon: const Icon(Icons.delete),
-                                      onPressed: () {
-                                        _databaseService.deleteTask(task.id);
-                                        setState(() {});
-                                      },
+                                  final note = _notes[index];
+                                  return Card(
+                                    margin: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 6,
                                     ),
-                                    title: Text(task.content),
-                                    trailing: Checkbox(
-                                      value: task.status == 1,
-                                      onChanged: (value) {
-                                        _databaseService.updateTaskStatus(
-                                          task.id,
-                                          value == true ? 1 : 0,
-                                        );
-                                        setState(() {});
-                                      },
+                                    child: ListTile(
+                                      title: Text(
+                                        note.title,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      subtitle: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          const SizedBox(height: 4),
+                                          Text(note.content),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            'Mulai: ${note.startTime.toLocal().toString().split(".")[0]}',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey[600],
+                                            ),
+                                          ),
+                                          Text(
+                                            'Selesai: ${note.endTime.toLocal().toString().split(".")[0]}',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey[600],
+                                            ),
+                                          ),
+                                          if (note.reminderMinutes != null)
+                                            Text(
+                                              'Pengingat: ${note.reminderMinutes} menit sebelum',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey[600],
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                      trailing: IconButton(
+                                        icon: const Icon(Icons.delete),
+                                        onPressed: () async {
+                                          await DBHelper.deleteNote(note.id!);
+                                          fetchTodos();
+                                        },
+                                      ),
                                     ),
                                   );
                                 },
-                              );
-                            },
-                          ),
+                              ),
                         ],
                       ),
                     ),

@@ -1,79 +1,79 @@
-import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
-import 'package:halamanutama/models/task.dart';
+import 'package:path/path.dart';
+import 'package:todolist/models/task.dart';
 
-class DatabaseService {
-  static Database? _db;
-  static final DatabaseService instance = DatabaseService._constructor();
+class DBHelper {
+  static Database? _database;
 
-  final String _tasksTableName = "tasks";
-  final String _tasksIdColumnName = "id";
-  final String _tasksContentColumnName = "content";
-  final String _tasksStatusColumnName = "status";
-
-  DatabaseService._constructor();
-
-  Future<Database> get database async {
-    if (_db != null) return _db!;
-    _db = await getDatabase();
-    return _db!;
+  static Future<Database> get database async {
+    if (_database != null) return _database!;
+    _database = await initDb();
+    return _database!;
   }
 
-  Future<Database> getDatabase() async {
-    final databaseDirPath = await getDatabasesPath();
-    final databasePath = join(databaseDirPath, "master_db.db");
-    final database = await openDatabase(
-      databasePath,
+  static Future<Database> initDb() async {
+    final dbPath = await getDatabasesPath();
+    final path = join(dbPath, 'todo.db');
+
+    return await openDatabase(
+      path,
       version: 1,
-      onCreate: (db, version) {
-        db.execute('''
-          CREATE TABLE $_tasksTableName (
-            $_tasksIdColumnName INTEGER PRIMARY KEY,
-            $_tasksContentColumnName TEXT NOT NULL,
-            $_tasksStatusColumnName INTEGER NOT NULL
+      onCreate: (db, version) async {
+        await db.execute('''
+          CREATE TABLE todos(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT,
+            content TEXT,
+            start_time TEXT,
+            end_time TEXT,
+            reminder_minutes INTEGER
           )
         ''');
       },
     );
-    return database;
   }
 
-  void addTask(String content) async {
+  static Future<void> insertNote(Todo todo) async {
     final db = await database;
-    await db.insert(_tasksTableName, {
-      _tasksContentColumnName: content,
-      _tasksStatusColumnName: 0,
-    });
-  }
-
-  Future<List<Task>> getTasks() async {
-    final db = await database;
-    final data = await db.query(_tasksTableName);
-    List<Task> tasks =
-        data
-            .map(
-              (e) => Task(
-                id: e["id"] as int,
-                status: e["status"] as int,
-                content: e["content"] as String,
-              ),
-            )
-            .toList();
-    return tasks;
-  }
-
-  void updateTaskStatus(int id, int status) async {
-    final db = await database;
-    await db.update(
-      _tasksTableName,
-      {_tasksStatusColumnName: status},
-      where: 'id = ?',
-      whereArgs: [id],
+    await db.insert(
+      'todos',
+      todo.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
-  void deleteTask(int id) async {
+  static Future<List<Todo>> getNotes() async {
     final db = await database;
-    await db.delete(_tasksTableName, where: 'id = ?', whereArgs: [id]);
+    final List<Map<String, dynamic>> maps = await db.query('todos');
+    return List.generate(maps.length, (i) {
+      return Todo(
+        id: maps[i]['id'],
+        title: maps[i]['title'],
+        content: maps[i]['content'],
+        startTime: DateTime.parse(maps[i]['start_time']),
+        endTime: DateTime.parse(maps[i]['end_time']),
+        reminderMinutes: maps[i]['reminder_minutes'],
+      );
+    });
+  }
+
+  static Future<int> updateNote(Todo note) async {
+    final db = await database;
+    return await db.update(
+      'todos',
+      note.toMap(),
+      where: 'id = ?',
+      whereArgs: [note.id],
+    );
+  }
+
+  static Future<int> deleteNote(int id) async {
+    final db = await database;
+    return await db.delete('todos', where: 'id = ?', whereArgs: [id]);
+  }
+
+  static Future<int> insertTodo(Todo todo) async {
+    final db = await database;
+    return await db.insert('todos', todo.toMap());
   }
 }
