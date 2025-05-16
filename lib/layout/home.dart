@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:todolist/database/database.dart';
+import 'package:todolist/layout/FormScreen.dart';
 import 'package:todolist/layout/todo_list.dart';
 import 'package:todolist/models/task.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -205,43 +206,45 @@ class HomeScreenState extends State<HomeScreen> {
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
-                                      subtitle: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                      subtitle: Text(note.content),
+                                      trailing: Row(
+                                        mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          const SizedBox(height: 4),
-                                          Text(note.content),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            'Mulai: ${note.startTime.toLocal().toString().split(".")[0]}',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.grey[600],
+                                          IconButton(
+                                            icon: const Icon(
+                                              Icons.edit,
+                                              color: Colors.blue,
                                             ),
+                                            onPressed: () async {
+                                              final result = await Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder:
+                                                      (
+                                                        context,
+                                                      ) => TodoFormScreen(
+                                                        isEdit: true,
+                                                        todo:
+                                                            note, // Kirim todo yang mau diedit
+                                                      ),
+                                                ),
+                                              );
+                                              if (result == true) fetchTodos();
+                                            },
                                           ),
-                                          Text(
-                                            'Selesai: ${note.endTime.toLocal().toString().split(".")[0]}',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.grey[600],
+                                          IconButton(
+                                            icon: const Icon(
+                                              Icons.delete,
+                                              color: Colors.red,
                                             ),
+                                            onPressed: () async {
+                                              await DBHelper.deleteNote(
+                                                note.id!,
+                                              );
+                                              fetchTodos();
+                                            },
                                           ),
-                                          if (note.reminderMinutes != null)
-                                            Text(
-                                              'Pengingat: ${note.reminderMinutes} menit sebelum',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.grey[600],
-                                              ),
-                                            ),
                                         ],
-                                      ),
-                                      trailing: IconButton(
-                                        icon: const Icon(Icons.delete),
-                                        onPressed: () async {
-                                          await DBHelper.deleteNote(note.id!);
-                                          fetchTodos();
-                                        },
                                       ),
                                     ),
                                   );
